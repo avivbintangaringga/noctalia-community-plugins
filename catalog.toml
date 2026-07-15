@@ -73,3 +73,14 @@ description = "Mangowm keymode notifier"
 deprecated = false
 min_noctalia = "5.0.0"
 tags = ["bar", "mangowc"]
+
+[[plugin]]
+id = "oldirtty/color_picker"
+name = "Color Picker"
+version = "1.0.0"
+author = "oldirtty"
+license = "MIT"
+icon = "palette"
+description = "Pick a color from your screen with hyprpicker."
+min_noctalia = "5.0.0"
+tags = ["theming", "utility", "bar", "panel"]
