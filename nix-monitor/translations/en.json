@@ -32,6 +32,8 @@
   "setting.widget.update_available_color.label": "Update available color",
   "setting.widget.unknown_glyph.label": "Unknown status glyph",
   "setting.widget.unknown_color.label": "Unknown status color",
+  "setting.widget.panel_card_background_color.label": "Panel card background color",
+  "setting.widget.panel_card_background_opacity.label": "Panel card background opacity",
   "setting.update_check_interval.label": "Update check interval",
   "setting.update_check_interval.description": "How often to check for updates (in minutes)",
   "setting.update_check_duration_threshold.label": "Update check duration threshold",

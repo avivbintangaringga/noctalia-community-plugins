@@ -20,9 +20,15 @@ function watchState(key, cb)
     noctalia.state.watch(key, cb)
 end
 
+local function getBackgroundColor()
+    local color = cfg("panel_card_color")
+    local opacity = cfg("panel_card_opacity") / 100
+    return `{color}/{opacity}`
+end
+
 local function labelBox(subtext, text, glyph)
     return ui.column({
-        fill = "surface/0.7",
+        fill = getBackgroundColor(),
         flexGrow = 1,
         height = 100,
         radius = 8,
@@ -51,7 +57,7 @@ local function statLabel(text, glyph: string?)
     if glyph ~= nil then
         table.insert(items, ui.glyph({
             name = glyph,
-            size = 20
+            size = 18
         }))
     end
 
@@ -151,7 +157,7 @@ local function render()
                 spacing = 4
             }),
             ui.row({
-                fill = "surface/0.7",
+                fill = getBackgroundColor(),
                 align = "center",
                 justify = "space_between",
                 flexGrow = 1,
@@ -160,7 +166,7 @@ local function render()
                 radius = 8,
             }, generationItems),
             ui.row({
-                fill = "surface/0.7",
+                fill = getBackgroundColor(),
                 align = "center",
                 justify = "center",
                 flexGrow = 1,
