@@ -65,7 +65,7 @@ tags = ["launcher"]
 [[plugin]]
 id = "gambled23/mangowm-keymode"
 name = "Mangowm Keymode"
-version = "1.0.1"
+version = "1.0.2"
 author = "gambled23"
 license = "MIT"
 icon = "keyboard"
