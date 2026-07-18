@@ -10,5 +10,7 @@
   "setting.reboot_on_select.label": "Reboot on select",
   "setting.reboot_on_select.description": "Whether to automatically reboot after selecting an entry",
   "setting.reboot_command.label": "Reboot command",
-  "setting.reboot_command.description": "Command to be executed when reboot on select is enabled"
+  "setting.reboot_command.description": "Command to be executed when reboot on select is enabled",
+  "notification.failed_to_set_next_boot": "Failed to set next boot",
+  "notification.timed_out": "Timed out"
 }
