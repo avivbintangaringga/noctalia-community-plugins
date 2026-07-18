@@ -70,16 +70,24 @@ function render(entries)
 		local callBackFn = `setBootNext_{entry.id}`
 		env[callBackFn] = function()
 			noctalia.runAsync(`{privilegeCmd} efibootmgr --bootnext {entry.id}`, function(result)
-				load()
+				if not result.timedOut then
+					if result.exitCode == 0 then
+						load()
 
-				if rebootOnSelect then
-					noctalia.runAsync(rebootCmd)
-				end
+						if rebootOnSelect then
+							noctalia.runAsync(rebootCmd)
+						end
 
-				if closeOnSelect then
-					panel.close()
+						if closeOnSelect then
+							panel.close()
+						end
+					else
+						noctalia.notify(tr("notification.failed_to_set_next_boot"), result.stderr)
+					end
+				else
+					noctalia.notify(tr("notification.failed_to_set_next_boot"), tr("notification.timed_out"))
 				end
-			end, 5000)
+			end, 60 * 1000)
 		end
 
 		table.insert(
