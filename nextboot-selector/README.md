@@ -11,7 +11,7 @@ Next Boot Selector selects which boot entry to boot for the next reboot only. Us
 
 ## Requirements
 
-This plugin mainly requires `efibootmgr` but need to escalate using `pkexec` or `sudo`. Note that if you use `sudo`, you need to set the option `NOPASSWD` for the `efibootmgr` command so it doesn't requires password to run.
+This plugin mainly requires `efibootmgr` but need to escalate using `pkexec` or `sudo`. Note that if you use `sudo`, you need to set the option `NOPASSWD` for the `efibootmgr` command so it doesn't requires password to run. `reboot` command is also required if reboot on select is enabled.
 
 ## Usage
 

@@ -6,7 +6,7 @@ icon            = "refresh-dot"
 author          = "avivbintangaringga"
 description     = "Select boot entry for the next reboot"
 tags            = [ "utility" ]
-dependencies    = [ "efibootmgr", "pkexec" ]
+dependencies    = [ "efibootmgr", "pkexec", "reboot", "sudo" ]
 license         = "MIT"
 
 [[widget]]
