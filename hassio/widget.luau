@@ -1,12 +1,17 @@
 --!nonstrict
 
-local haUrl = noctalia.getConfig("ha_url")
+local haUrlRaw = noctalia.getConfig("ha_url")
 local showEntityCount = noctalia.getConfig("show_entity_count")
 
 local status = "unconfigured"
 local entityCount = 0
 
 local render
+
+local function getCleanUrl()
+  if type(haUrlRaw) ~= "string" then return "" end
+  return (haUrlRaw:gsub("/$", ""))
+end
 
 local function tr(key, subst)
   return noctalia.tr("widget." .. key, subst)
@@ -29,6 +34,8 @@ local function getStatusText()
     return tr("status_connecting")
   elseif status == "disconnected" then
     return tr("status_disconnected")
+  elseif status == "unreachable" then
+    return tr("status_unreachable")
   elseif status == "auth_failed" then
     return tr("status_auth_failed")
   else
@@ -41,7 +48,7 @@ local function getStatusColor()
     return "primary"
   elseif status == "connecting" then
     return "on_error"
-  elseif status == "disconnected" or status == "auth_failed" then
+  elseif status == "disconnected" or status == "unreachable" or status == "auth_failed" then
     return "error"
   else
     return "on_surface_variant"
@@ -83,8 +90,9 @@ function onClick()
 end
 
 function onRightClick()
-  if haUrl and haUrl ~= "" then
-    noctalia.runAsync("xdg-open " .. ("'" .. haUrl:gsub("'", "'\\''") .. "'"))
+  local url = getCleanUrl()
+  if url and url ~= "" then
+    noctalia.runAsync("xdg-open " .. ("'" .. url:gsub("'", "'\\''") .. "'"))
   end
 end
 

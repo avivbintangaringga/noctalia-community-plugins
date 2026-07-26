@@ -125,6 +125,93 @@ class PluginConfigAccessorTests(unittest.TestCase):
         self.assertEqual(validate_plugins.obsolete_config_accessors(source), [])
 
 
+class TranslationKeyTests(unittest.TestCase):
+    def test_accepts_valid_keys(self) -> None:
+        for key in (
+            "settings.translation_language.label",
+            "settings.translation_language.options.zh-hans",
+            "settings.translation_language.options.en",
+            "a.b-c.d_e.f0",
+        ):
+            with self.subTest(key=key):
+                self.assertTrue(validate_plugins.is_valid_translation_key(key))
+
+    def test_rejects_invalid_keys(self) -> None:
+        for key in (
+            "settings.options.zh-Hans",  # uppercase segment
+            "settings.options.zh-Hant",
+            "settings.Label",
+            "settings._leading",  # leading underscore in a segment
+            "settings..options",  # empty segment
+            "",
+        ):
+            with self.subTest(key=key):
+                self.assertFalse(validate_plugins.is_valid_translation_key(key))
+
+    def test_rejects_dotted_json_object_keys(self) -> None:
+        # A flat dotted key is what the i18n platform expands into nested objects; the JSON
+        # source must nest instead, so an object key with a dot is invalid.
+        self.assertFalse(validate_plugins.is_valid_key_segment("settings.label"))
+        self.assertTrue(validate_plugins.is_valid_key_segment("eyecare-active-duration"))
+        translations = {"settings.eyecare-active-duration.label": "Active Duration"}
+        self.assertEqual(
+            validate_plugins.invalid_translation_keys(translations),
+            ["settings.eyecare-active-duration.label"],
+        )
+
+    def test_walks_nested_keys_and_reports_full_paths(self) -> None:
+        translations = {
+            "settings": {
+                "translation_language": {
+                    "options": {"zh-Hans": "Simplified", "zh-Hant": "Traditional", "en": "English"}
+                }
+            }
+        }
+        self.assertEqual(
+            validate_plugins.invalid_translation_keys(translations),
+            [
+                "settings.translation_language.options.zh-Hans",
+                "settings.translation_language.options.zh-Hant",
+            ],
+        )
+
+    def validate_keys(self, translations: object) -> list[str]:
+        with tempfile.TemporaryDirectory() as directory:
+            plugin_dir = Path(directory) / "example"
+            plugin_dir.mkdir()
+            validator = validate_plugins.Validator(Path(directory))
+            validator.validate_translation_keys(plugin_dir, translations)
+            return validator.errors
+
+    def test_reports_bad_json_keys_without_a_reference(self) -> None:
+        errors = self.validate_keys({"settings": {"options": {"zh-Hans": "Simplified"}}})
+        self.assertEqual(len(errors), 1)
+        self.assertIn("settings.options.zh-Hans", errors[0])
+        self.assertIn("invalid translation key format", errors[0])
+
+    def test_accepts_valid_json_keys(self) -> None:
+        self.assertEqual(self.validate_keys({"settings": {"options": {"zh-hans": "Simplified"}}}), [])
+
+    def validate_reference(self, label_key: object) -> list[str]:
+        validator = validate_plugins.Validator(Path("/repo"))
+        validator.validate_translation_key(
+            Path("/repo/example/plugin.toml"),
+            {label_key: "x"} if isinstance(label_key, str) else {},
+            "setting[0]",
+            "label_key",
+            label_key,
+        )
+        return validator.errors
+
+    def test_rejects_badly_formatted_reference(self) -> None:
+        errors = self.validate_reference("settings.options.zh-Hans")
+        self.assertEqual(len(errors), 1)
+        self.assertIn("is not a valid translation key", errors[0])
+
+    def test_accepts_well_formatted_existing_reference(self) -> None:
+        self.assertEqual(self.validate_reference("settings.options.zh-hans"), [])
+
+
 class ReadmeTests(unittest.TestCase):
     MANIFEST = {
         "id": "me/example",
@@ -218,6 +305,53 @@ Configure the update interval in plugin settings.
             any("## Requirements" in error for error in self.validate_readme(without_requirements))
         )
         self.assertTrue(any("## Settings" in error for error in self.validate_readme(without_settings)))
+
+
+class WidgetActionsTests(unittest.TestCase):
+    def validate_actions(self, entry: dict, plugin_api: object = 14) -> list[str]:
+        validator = validate_plugins.Validator(Path("/repo"))
+        validator.validate_widget_fields(
+            Path("/repo/example/plugin.toml"),
+            "widget[0]",
+            entry,
+            plugin_api,
+        )
+        return validator.errors
+
+    def test_accepts_every_gesture(self) -> None:
+        actions = {gesture: "volume-mute" for gesture in validate_plugins.WIDGET_GESTURES}
+        self.assertEqual(self.validate_actions({"actions": actions}), [])
+
+    def test_accepts_exec_and_none(self) -> None:
+        self.assertEqual(
+            self.validate_actions({"actions": {"middle": "exec playerctl pause", "right": "none"}}),
+            [],
+        )
+
+    def test_entry_without_actions_is_fine(self) -> None:
+        self.assertEqual(self.validate_actions({"id": "bar"}), [])
+
+    def test_rejects_unknown_gesture(self) -> None:
+        self.assertNotEqual(self.validate_actions({"actions": {"ctrl+left": "volume-mute"}}), [])
+
+    def test_rejects_non_table(self) -> None:
+        self.assertNotEqual(self.validate_actions({"actions": "volume-mute"}), [])
+
+    def test_rejects_non_string_action(self) -> None:
+        self.assertNotEqual(self.validate_actions({"actions": {"middle": 42}}), [])
+
+    def test_rejects_empty_action(self) -> None:
+        self.assertNotEqual(self.validate_actions({"actions": {"middle": ""}}), [])
+
+    def test_rejects_bare_exec(self) -> None:
+        self.assertNotEqual(self.validate_actions({"actions": {"middle": "exec"}}), [])
+
+    def test_requires_plugin_api_14(self) -> None:
+        errors = self.validate_actions({"actions": {"middle": "volume-mute"}}, plugin_api=13)
+        self.assertTrue(any("plugin_api >= 14" in error for error in errors))
+
+    def test_widget_entry_accepts_actions_field(self) -> None:
+        self.assertIn("actions", validate_plugins.ENTRY_FIELDS["widget"])
 
 
 if __name__ == "__main__":
