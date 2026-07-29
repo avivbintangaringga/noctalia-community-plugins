@@ -68,6 +68,7 @@ setState("isRemoteCheckRunning", false)
 setState("isUpdateAvailable", false)
 setState("lastGenerationsCheckTime", 0)
 setState("isSystemStatsCheckRunning", false)
+setState("systemStatsCheckHasBeenPerformed", false)
 setState("lastSystemStatsCheckTime", os.time())
 setState("lastSystemStatsCheckRunTime", os.time())
 setState("hasHomeManager", noctalia.commandExists("home-manager"))
@@ -172,6 +173,11 @@ function checkSystemStats()
 		return
 	end
 
+	if cfg("system_stats_check_mode") == "on_start" and getState("systemStatsCheckHasBeenPerformed") then
+		return
+	end
+
+	setState("systemStatsCheckHasBeenPerformed", true)
 	setState("isSystemStatsCheckRunning", true)
 	setState("lastSystemStatsCheckRunTime", os.time())
 
@@ -216,7 +222,12 @@ end
 -- Init
 checkLocalHash()
 checkRemoteHash(10)
-checkSystemStats()
+if cfg("system_stats_check_mode") ~= "off" then
+	checkSystemStats()
+else
+	setState("storeSize", "n/a")
+	setState("closureSize", "n/a")
+end
 
 -- Command watcher
 watchState("command", function(command)
