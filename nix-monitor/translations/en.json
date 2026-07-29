@@ -160,6 +160,7 @@
     }
   },
   "terminal": {
-    "press_enter_to_exit": "Press enter to exit..."
+    "press_enter_to_exit": "Press enter to exit...",
+    "command_exits_non_zero": "WARNING: Command exits in a non-zero status!\nPress enter to exit..."
   }
 }
